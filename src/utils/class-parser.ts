@@ -68,10 +68,10 @@ export function buildDarkModeClass(
   baseClass: string,
   darkValue: string
 ): string {
-  const parts = baseClass.split('-');
-  if (parts.length >= 2) {
-    parts[parts.length - 1] = darkValue;
-    return `dark:${parts.join('-')}`;
+  // Parse the base class to get the property
+  const parsed = parseClass(baseClass);
+  if (parsed && parsed.property) {
+    return `dark:${parsed.property}-${darkValue}`;
   }
   return `dark:${baseClass}`;
 }
@@ -86,23 +86,43 @@ export function findClassPairs(
   const parsed = parseClassString(classString);
   const pairs = new Map<string, { light?: ParsedClass; dark?: ParsedClass }>();
 
+  // First pass: collect all light classes
   for (const cls of parsed) {
     if (!cls.property || !properties.includes(cls.property)) {
       continue;
     }
 
-    const baseClass = getBaseClass(cls);
     const isDark = isDarkModeClass(cls);
 
-    if (!pairs.has(baseClass)) {
-      pairs.set(baseClass, {});
+    if (!isDark && !cls.modifier) {
+      // This is a light class
+      const baseClass = getBaseClass(cls);
+      if (!pairs.has(baseClass)) {
+        pairs.set(baseClass, {});
+      }
+      pairs.get(baseClass)!.light = cls;
+    }
+  }
+
+  // Second pass: match dark classes with their light counterparts
+  for (const cls of parsed) {
+    if (!cls.property || !properties.includes(cls.property)) {
+      continue;
     }
 
-    const pair = pairs.get(baseClass)!;
+    const isDark = isDarkModeClass(cls);
+
     if (isDark) {
-      pair.dark = cls;
-    } else if (!cls.modifier) {
-      pair.light = cls;
+      // This is a dark class, find its light counterpart
+      const darkProperty = cls.property;
+
+      // Look for a light class with the same property
+      for (const [, pair] of pairs.entries()) {
+        if (pair.light && pair.light.property === darkProperty && !pair.dark) {
+          pair.dark = cls;
+          break;
+        }
+      }
     }
   }
 

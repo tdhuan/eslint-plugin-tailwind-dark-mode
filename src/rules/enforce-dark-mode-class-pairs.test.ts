@@ -115,6 +115,8 @@ ruleTester.run('enforce-dark-mode-class-pairs', rule, {
           messageId: 'missingDarkMode',
         },
       ],
+      output:
+        'classnames("text-neutral-900 dark:text-neutral-100", "bg-white dark:bg-black")',
     },
     // Dynamic expression warning
     {
@@ -167,6 +169,7 @@ customRuleTester.run('enforce-dark-mode-class-pairs with custom config', rule, {
           messageId: 'missingDarkMode',
         },
       ],
+      output: '<div className="text-blue-600 dark:text-blue-300" />',
     },
   ],
 });
