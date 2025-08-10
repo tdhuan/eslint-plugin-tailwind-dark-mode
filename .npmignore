@@ -1,0 +1,21 @@
+# Source files
+src/
+tests/
+examples/
+
+# Config files
+.eslintrc.js
+.prettierrc
+tsconfig.json
+tsup.config.ts
+vitest.config.ts
+
+# CI/CD
+.github/
+.husky/
+
+# Development files
+*.log
+*.tgz
+coverage/
+.DS_Store
