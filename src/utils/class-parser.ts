@@ -1,4 +1,5 @@
 import type { ParsedClass } from '../types';
+import { needsDarkModePair } from './dark-mode-mappings';
 
 /**
  * Parse a single Tailwind class into its components
@@ -116,9 +117,15 @@ export function findClassPairs(
       // This is a dark class, find its light counterpart
       const darkProperty = cls.property;
 
-      // Look for a light class with the same property
+      // Look for a light class with the same property that needs a dark mode pair
       for (const [, pair] of pairs.entries()) {
-        if (pair.light && pair.light.property === darkProperty && !pair.dark) {
+        if (
+          pair.light &&
+          pair.light.property === darkProperty &&
+          pair.light.value &&
+          needsDarkModePair(pair.light.value) &&
+          !pair.dark
+        ) {
           pair.dark = cls;
           break;
         }

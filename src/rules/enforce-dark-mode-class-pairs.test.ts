@@ -20,6 +20,17 @@ ruleTester.run('enforce-dark-mode-class-pairs', rule, {
     {
       code: '<div className="bg-white dark:bg-black border-gray-200 dark:border-gray-800" />',
     },
+    // Black to white pairing
+    {
+      code: '<div className="text-black dark:text-white" />',
+    },
+    {
+      code: '<div className="text-white dark:text-black" />',
+    },
+
+    {
+      code: '<div className="pb-2 pt-4 text-2xl capitalize text-black dark:text-white sm:pt-6" />',
+    },
     // No dark mode needed for transparent
     {
       code: '<div className="bg-transparent" />',
@@ -56,6 +67,20 @@ ruleTester.run('enforce-dark-mode-class-pairs', rule, {
         },
       ],
       output: '<div className="text-neutral-900 dark:text-neutral-100" />',
+    },
+    // Missing dark mode for text-black
+    {
+      code: '<div className="text-black" />',
+      errors: [
+        {
+          messageId: 'missingDarkMode',
+          data: {
+            className: 'text-black',
+            expected: 'dark:text-white',
+          },
+        },
+      ],
+      output: '<div className="text-black dark:text-white" />',
     },
     // Multiple missing dark mode classes
     {
