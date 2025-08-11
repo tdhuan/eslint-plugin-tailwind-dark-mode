@@ -13,48 +13,50 @@ const ruleTester = new RuleTester({
 
 ruleTester.run('enforce-dark-mode-class-pairs', rule, {
   valid: [
-    // Properly paired classes
+    // Classes with dark variants for the same property group
     {
-      code: '<div className="text-neutral-900 dark:text-neutral-100" />',
+      code: '<div className="text-neutral-900 dark:text-white" />',
+    },
+    {
+      code: '<div className="bg-red-500 dark:bg-red-700" />',
     },
     {
       code: '<div className="bg-white dark:bg-black border-gray-200 dark:border-gray-800" />',
     },
-    // Black to white pairing
     {
       code: '<div className="text-black dark:text-white" />',
     },
     {
-      code: '<div className="text-white dark:text-black" />',
-    },
-
-    {
       code: '<div className="pb-2 pt-4 text-2xl capitalize text-black dark:text-white sm:pt-6" />',
     },
-    // No dark mode needed for transparent
-    {
-      code: '<div className="bg-transparent" />',
-    },
-    // Template literal with proper pairs
+    // Template literal with dark variants
     {
       code: 'const cls = `text-neutral-900 dark:text-neutral-100`;',
     },
-    // Classnames with proper pairs
+    // Classnames with dark variants
     {
       code: 'classnames("text-neutral-900 dark:text-neutral-100", "bg-white dark:bg-black")',
     },
-    // clsx with proper pairs
+    // clsx with dark variants
     {
       code: 'clsx("border-gray-200 dark:border-gray-800")',
     },
-    // Properties not in the check list
+    // Properties not in the check list (should be ignored)
     {
       code: '<div className="flex items-center justify-between" />',
+    },
+    // Dark classes outside scope should be ignored
+    {
+      code: '<div className="dark:underline dark:decoration-red-500" />',
+    },
+    // Mix of tracked and untracked properties
+    {
+      code: '<div className="text-black dark:text-white flex items-center" />',
     },
   ],
 
   invalid: [
-    // Missing dark mode class
+    // Missing dark variant for text property
     {
       code: '<div className="text-neutral-900" />',
       errors: [
@@ -62,27 +64,25 @@ ruleTester.run('enforce-dark-mode-class-pairs', rule, {
           messageId: 'missingDarkMode',
           data: {
             className: 'text-neutral-900',
-            expected: 'dark:text-neutral-100',
           },
         },
       ],
-      output: '<div className="text-neutral-900 dark:text-neutral-100" />',
+      output: '<div className="text-neutral-900 dark:text-neutral-900" />',
     },
-    // Missing dark mode for text-black
+    // Missing dark variant for bg property
     {
-      code: '<div className="text-black" />',
+      code: '<div className="bg-red-500" />',
       errors: [
         {
           messageId: 'missingDarkMode',
           data: {
-            className: 'text-black',
-            expected: 'dark:text-white',
+            className: 'bg-red-500',
           },
         },
       ],
-      output: '<div className="text-black dark:text-white" />',
+      output: '<div className="bg-red-500 dark:bg-red-500" />',
     },
-    // Multiple missing dark mode classes
+    // Multiple missing dark variants for different properties
     {
       code: '<div className="text-neutral-900 bg-white" />',
       errors: [
@@ -90,36 +90,19 @@ ruleTester.run('enforce-dark-mode-class-pairs', rule, {
           messageId: 'missingDarkMode',
           data: {
             className: 'text-neutral-900',
-            expected: 'dark:text-neutral-100',
           },
         },
         {
           messageId: 'missingDarkMode',
           data: {
             className: 'bg-white',
-            expected: 'dark:bg-black',
           },
         },
       ],
       output:
-        '<div className="text-neutral-900 bg-white dark:text-neutral-100 dark:bg-black" />',
+        '<div className="text-neutral-900 bg-white dark:text-neutral-900 dark:bg-white" />',
     },
-    // Mismatched dark mode value
-    {
-      code: '<div className="text-neutral-900 dark:text-neutral-200" />',
-      errors: [
-        {
-          messageId: 'mismatchedDarkMode',
-          data: {
-            className: 'text-neutral-900',
-            expected: 'dark:text-neutral-100',
-            actual: 'dark:text-neutral-200',
-          },
-        },
-      ],
-      output: '<div className="text-neutral-900 dark:text-neutral-100" />',
-    },
-    // Template literal with missing dark mode
+    // Template literal with missing dark variant
     {
       code: 'const cls = `text-neutral-900`;',
       errors: [
@@ -127,9 +110,9 @@ ruleTester.run('enforce-dark-mode-class-pairs', rule, {
           messageId: 'missingDarkMode',
         },
       ],
-      output: 'const cls = `text-neutral-900 dark:text-neutral-100`;',
+      output: 'const cls = `text-neutral-900 dark:text-neutral-900`;',
     },
-    // Classnames with missing dark mode
+    // Classnames with missing dark variants
     {
       code: 'classnames("text-neutral-900", "bg-white")',
       errors: [
@@ -141,7 +124,7 @@ ruleTester.run('enforce-dark-mode-class-pairs', rule, {
         },
       ],
       output:
-        'classnames("text-neutral-900 dark:text-neutral-100", "bg-white dark:bg-black")',
+        'classnames("text-neutral-900 dark:text-neutral-900", "bg-white dark:bg-white")',
     },
     // Dynamic expression warning
     {
@@ -172,9 +155,7 @@ customRuleTester.run('enforce-dark-mode-class-pairs with custom config', rule, {
       code: '<div className="text-blue-600 dark:text-blue-300" />',
       options: [
         {
-          mappings: {
-            'blue-600': 'blue-300',
-          },
+          properties: ['text'],
         },
       ],
     },
@@ -184,9 +165,7 @@ customRuleTester.run('enforce-dark-mode-class-pairs with custom config', rule, {
       code: '<div className="text-blue-600" />',
       options: [
         {
-          mappings: {
-            'blue-600': 'blue-300',
-          },
+          properties: ['text'],
         },
       ],
       errors: [
@@ -194,7 +173,7 @@ customRuleTester.run('enforce-dark-mode-class-pairs with custom config', rule, {
           messageId: 'missingDarkMode',
         },
       ],
-      output: '<div className="text-blue-600 dark:text-blue-300" />',
+      output: '<div className="text-blue-600 dark:text-blue-600" />',
     },
   ],
 });

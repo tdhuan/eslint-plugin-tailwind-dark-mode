@@ -1,5 +1,4 @@
 import type { ParsedClass } from '../types';
-import { needsDarkModePair } from './dark-mode-mappings';
 
 /**
  * Parse a single Tailwind class into its components
@@ -78,16 +77,17 @@ export function buildDarkModeClass(
 }
 
 /**
- * Find class pairs (light and dark variants) in a class string
+ * Find classes that need dark mode variants
  */
-export function findClassPairs(
+export function findClassesNeedingDark(
   classString: string,
   properties: string[]
-): Map<string, { light?: ParsedClass; dark?: ParsedClass }> {
+): { lightClasses: ParsedClass[]; hasDarkVariants: Set<string> } {
   const parsed = parseClassString(classString);
-  const pairs = new Map<string, { light?: ParsedClass; dark?: ParsedClass }>();
+  const lightClasses: ParsedClass[] = [];
+  const hasDarkVariants = new Set<string>();
 
-  // First pass: collect all light classes
+  // First pass: collect all light classes in allowed properties
   for (const cls of parsed) {
     if (!cls.property || !properties.includes(cls.property)) {
       continue;
@@ -96,16 +96,12 @@ export function findClassPairs(
     const isDark = isDarkModeClass(cls);
 
     if (!isDark && !cls.modifier) {
-      // This is a light class
-      const baseClass = getBaseClass(cls);
-      if (!pairs.has(baseClass)) {
-        pairs.set(baseClass, {});
-      }
-      pairs.get(baseClass)!.light = cls;
+      // This is a light class in an allowed property group
+      lightClasses.push(cls);
     }
   }
 
-  // Second pass: match dark classes with their light counterparts
+  // Second pass: collect all dark variants for allowed properties
   for (const cls of parsed) {
     if (!cls.property || !properties.includes(cls.property)) {
       continue;
@@ -114,24 +110,10 @@ export function findClassPairs(
     const isDark = isDarkModeClass(cls);
 
     if (isDark) {
-      // This is a dark class, find its light counterpart
-      const darkProperty = cls.property;
-
-      // Look for a light class with the same property that needs a dark mode pair
-      for (const [, pair] of pairs.entries()) {
-        if (
-          pair.light &&
-          pair.light.property === darkProperty &&
-          pair.light.value &&
-          needsDarkModePair(pair.light.value) &&
-          !pair.dark
-        ) {
-          pair.dark = cls;
-          break;
-        }
-      }
+      // This is a dark class in an allowed property group
+      hasDarkVariants.add(cls.property);
     }
   }
 
-  return pairs;
+  return { lightClasses, hasDarkVariants };
 }
