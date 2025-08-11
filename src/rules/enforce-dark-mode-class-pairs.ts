@@ -1,22 +1,17 @@
 import type { Rule } from 'eslint';
 import type { DarkModeConfig } from '../types';
-import {
-  // parseClassString,
-  findClassPairs,
-  buildDarkModeClass,
-  // getBaseClass,
-} from '../utils/class-parser';
+import { findClassesNeedingDark } from '../utils/class-parser';
 import {
   DEFAULT_PROPERTIES,
   getDarkModeValue,
-  needsDarkModePair,
 } from '../utils/dark-mode-mappings';
 
 const rule: Rule.RuleModule = {
   meta: {
     type: 'suggestion',
     docs: {
-      description: 'Enforce paired dark mode classes for Tailwind CSS',
+      description:
+        'Enforce dark mode variants for specific Tailwind CSS property groups',
       category: 'Best Practices',
       recommended: true,
       url: 'https://github.com/tdhuan/eslint-plugin-tailwind-dark-mode',
@@ -55,19 +50,15 @@ const rule: Rule.RuleModule = {
       },
     ],
     messages: {
-      missingDarkMode:
-        'Missing dark mode pair for "{{className}}". Expected: "{{expected}}"',
-      mismatchedDarkMode:
-        'Mismatched dark mode value for "{{className}}". Expected "{{expected}}" but found "{{actual}}"',
+      missingDarkMode: 'Missing dark mode variant for "{{className}}".',
       dynamicExpression:
-        'Could not verify dark mode pairs in dynamic expression',
+        'Could not verify dark mode variants in dynamic expression',
     },
   },
 
   create(context) {
     const options: DarkModeConfig = context.options[0] || {};
     const properties = options.properties || DEFAULT_PROPERTIES;
-    const customMappings = options.mappings || {};
     const autofix = options.autofix !== false;
 
     /**
@@ -83,37 +74,39 @@ const rule: Rule.RuleModule = {
         return;
       }
 
-      const pairs = findClassPairs(value, properties);
+      const { lightClasses, hasDarkVariants } = findClassesNeedingDark(
+        value,
+        properties
+      );
       const violations: Array<{
         className: string;
         expected: string;
-        actual?: string;
-        type: 'missing' | 'mismatched';
+        type: 'missing';
       }> = [];
 
-      pairs.forEach((pair, baseClass) => {
-        if (!pair.light || !pair.light.value) return;
+      // Check each light class to see if there's a dark variant for its property group
+      lightClasses.forEach((lightClass) => {
+        if (!lightClass.property) return;
 
-        const lightValue = pair.light.value;
-        if (!needsDarkModePair(lightValue)) return;
+        // Check if there's any dark variant for this property group
+        if (!hasDarkVariants.has(lightClass.property)) {
+          // Generate proper dark variant using mapping
+          let expectedDarkClass = `dark:${lightClass.full}`;
 
-        const expectedDarkValue = getDarkModeValue(lightValue, customMappings);
-        if (!expectedDarkValue) return;
+          if (lightClass.value) {
+            const darkValue = getDarkModeValue(
+              lightClass.value,
+              options.mappings
+            );
+            if (darkValue) {
+              expectedDarkClass = `dark:${lightClass.property}-${darkValue}`;
+            }
+          }
 
-        if (!pair.dark) {
-          // Missing dark mode class
           violations.push({
-            className: baseClass,
-            expected: buildDarkModeClass(baseClass, expectedDarkValue),
+            className: lightClass.full,
+            expected: expectedDarkClass,
             type: 'missing',
-          });
-        } else if (pair.dark.value !== expectedDarkValue) {
-          // Mismatched dark mode value
-          violations.push({
-            className: baseClass,
-            expected: buildDarkModeClass(baseClass, expectedDarkValue),
-            actual: pair.dark.full,
-            type: 'mismatched',
           });
         }
       });
@@ -124,27 +117,18 @@ const rule: Rule.RuleModule = {
 
         // Apply all fixes to create the corrected string
         violations.forEach((violation) => {
-          if (violation.type === 'missing') {
-            // Add missing dark mode class
-            newValue = `${newValue} ${violation.expected}`;
-          } else if (violation.type === 'mismatched' && violation.actual) {
-            // Replace mismatched dark mode class
-            newValue = newValue.replace(violation.actual, violation.expected);
-          }
+          // Add missing dark mode class
+          newValue = `${newValue} ${violation.expected}`;
         });
 
         // Report each violation
         violations.forEach((violation, index) => {
           const report: Rule.ReportDescriptor = {
             node,
-            messageId:
-              violation.type === 'missing'
-                ? 'missingDarkMode'
-                : 'mismatchedDarkMode',
+            messageId: 'missingDarkMode',
             data: {
               className: violation.className,
               expected: violation.expected,
-              actual: violation.actual,
             },
           };
 
