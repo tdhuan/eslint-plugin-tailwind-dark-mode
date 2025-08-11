@@ -1,12 +1,10 @@
 import type { Rule } from 'eslint';
 import type { DarkModeConfig } from '../types';
+import { findClassesNeedingDark } from '../utils/class-parser';
 import {
-  // parseClassString,
-  findClassesNeedingDark,
-  // buildDarkModeClass,
-  // getBaseClass,
-} from '../utils/class-parser';
-import { DEFAULT_PROPERTIES } from '../utils/dark-mode-mappings';
+  DEFAULT_PROPERTIES,
+  getDarkModeValue,
+} from '../utils/dark-mode-mappings';
 
 const rule: Rule.RuleModule = {
   meta: {
@@ -92,10 +90,22 @@ const rule: Rule.RuleModule = {
 
         // Check if there's any dark variant for this property group
         if (!hasDarkVariants.has(lightClass.property)) {
-          // Missing dark mode class for this property group
+          // Generate proper dark variant using mapping
+          let expectedDarkClass = `dark:${lightClass.full}`;
+
+          if (lightClass.value) {
+            const darkValue = getDarkModeValue(
+              lightClass.value,
+              options.mappings
+            );
+            if (darkValue) {
+              expectedDarkClass = `dark:${lightClass.property}-${darkValue}`;
+            }
+          }
+
           violations.push({
             className: lightClass.full,
-            expected: `dark:${lightClass.full}`,
+            expected: expectedDarkClass,
             type: 'missing',
           });
         }

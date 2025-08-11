@@ -53,10 +53,14 @@ ruleTester.run('enforce-dark-mode-class-pairs', rule, {
     {
       code: '<div className="text-black dark:text-white flex items-center" />',
     },
+    // All neutral colors with mappings should work
+    {
+      code: '<div className="text-neutral-100 dark:text-neutral-900 bg-neutral-50 dark:bg-neutral-950" />',
+    },
   ],
 
   invalid: [
-    // Missing dark variant for text property
+    // Missing dark variant for text property - should map to correct dark variant
     {
       code: '<div className="text-neutral-900" />',
       errors: [
@@ -67,9 +71,9 @@ ruleTester.run('enforce-dark-mode-class-pairs', rule, {
           },
         },
       ],
-      output: '<div className="text-neutral-900 dark:text-neutral-900" />',
+      output: '<div className="text-neutral-900 dark:text-neutral-100" />',
     },
-    // Missing dark variant for bg property
+    // Missing dark variant for bg property - no mapping available, keep same
     {
       code: '<div className="bg-red-500" />',
       errors: [
@@ -82,7 +86,7 @@ ruleTester.run('enforce-dark-mode-class-pairs', rule, {
       ],
       output: '<div className="bg-red-500 dark:bg-red-500" />',
     },
-    // Multiple missing dark variants for different properties
+    // Multiple missing dark variants for different properties - with proper mapping
     {
       code: '<div className="text-neutral-900 bg-white" />',
       errors: [
@@ -100,9 +104,9 @@ ruleTester.run('enforce-dark-mode-class-pairs', rule, {
         },
       ],
       output:
-        '<div className="text-neutral-900 bg-white dark:text-neutral-900 dark:bg-white" />',
+        '<div className="text-neutral-900 bg-white dark:text-neutral-100 dark:bg-black" />',
     },
-    // Template literal with missing dark variant
+    // Template literal with missing dark variant - with proper mapping
     {
       code: 'const cls = `text-neutral-900`;',
       errors: [
@@ -110,9 +114,9 @@ ruleTester.run('enforce-dark-mode-class-pairs', rule, {
           messageId: 'missingDarkMode',
         },
       ],
-      output: 'const cls = `text-neutral-900 dark:text-neutral-900`;',
+      output: 'const cls = `text-neutral-900 dark:text-neutral-100`;',
     },
-    // Classnames with missing dark variants
+    // Classnames with missing dark variants - with proper mapping
     {
       code: 'classnames("text-neutral-900", "bg-white")',
       errors: [
@@ -124,7 +128,7 @@ ruleTester.run('enforce-dark-mode-class-pairs', rule, {
         },
       ],
       output:
-        'classnames("text-neutral-900 dark:text-neutral-900", "bg-white dark:bg-white")',
+        'classnames("text-neutral-900 dark:text-neutral-100", "bg-white dark:bg-black")',
     },
     // Dynamic expression warning
     {
@@ -134,6 +138,44 @@ ruleTester.run('enforce-dark-mode-class-pairs', rule, {
           messageId: 'dynamicExpression',
         },
       ],
+    },
+    // Test specific color mappings
+    {
+      code: '<div className="text-neutral-50" />',
+      errors: [
+        {
+          messageId: 'missingDarkMode',
+          data: {
+            className: 'text-neutral-50',
+          },
+        },
+      ],
+      output: '<div className="text-neutral-50 dark:text-neutral-950" />',
+    },
+    {
+      code: '<div className="bg-slate-200" />',
+      errors: [
+        {
+          messageId: 'missingDarkMode',
+          data: {
+            className: 'bg-slate-200',
+          },
+        },
+      ],
+      output: '<div className="bg-slate-200 dark:bg-slate-800" />',
+    },
+    // Test white/black special values
+    {
+      code: '<div className="text-white" />',
+      errors: [
+        {
+          messageId: 'missingDarkMode',
+          data: {
+            className: 'text-white',
+          },
+        },
+      ],
+      output: '<div className="text-white dark:text-black" />',
     },
   ],
 });
