@@ -106,6 +106,20 @@ ruleTester.run('enforce-dark-mode-class-pairs', rule, {
       output:
         '<div className="text-neutral-900 bg-white dark:text-neutral-100 dark:bg-black" />',
     },
+    // Multiple light classes for the same property should each have dark variants
+    {
+      code: '<div className="text-neutral-900 text-white dark:text-neutral-100" />',
+      errors: [
+        {
+          messageId: 'missingDarkMode',
+          data: {
+            className: 'text-white',
+          },
+        },
+      ],
+      output:
+        '<div className="text-neutral-900 text-white dark:text-neutral-100 dark:text-black" />',
+    },
     // Template literal with missing dark variant - with proper mapping
     {
       code: 'const cls = `text-neutral-900`;',

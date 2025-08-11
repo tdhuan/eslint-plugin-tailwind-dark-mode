@@ -1,4 +1,5 @@
 import type { ParsedClass } from '../types';
+import { needsDarkModePair } from './dark-mode-mappings';
 
 /**
  * Parse a single Tailwind class into its components
@@ -82,38 +83,33 @@ export function buildDarkModeClass(
 export function findClassesNeedingDark(
   classString: string,
   properties: string[]
-): { lightClasses: ParsedClass[]; hasDarkVariants: Set<string> } {
+): { lightClasses: ParsedClass[]; darkCounts: Map<string, number> } {
   const parsed = parseClassString(classString);
   const lightClasses: ParsedClass[] = [];
-  const hasDarkVariants = new Set<string>();
+  const darkCounts = new Map<string, number>();
 
-  // First pass: collect all light classes in allowed properties
+  // Single pass: collect light classes and count dark variants
   for (const cls of parsed) {
     if (!cls.property || !properties.includes(cls.property)) {
       continue;
     }
 
-    const isDark = isDarkModeClass(cls);
+    // Only consider classes with values that need dark mode counterparts
+    if (!cls.value || !needsDarkModePair(cls.value)) {
+      continue;
+    }
 
-    if (!isDark && !cls.modifier) {
-      // This is a light class in an allowed property group
+    if (isDarkModeClass(cls)) {
+      // Count existing dark variants per property
+      darkCounts.set(
+        cls.property,
+        (darkCounts.get(cls.property) || 0) + 1
+      );
+    } else if (!cls.modifier) {
+      // This is a light class in an allowed property group without any modifier
       lightClasses.push(cls);
     }
   }
 
-  // Second pass: collect all dark variants for allowed properties
-  for (const cls of parsed) {
-    if (!cls.property || !properties.includes(cls.property)) {
-      continue;
-    }
-
-    const isDark = isDarkModeClass(cls);
-
-    if (isDark) {
-      // This is a dark class in an allowed property group
-      hasDarkVariants.add(cls.property);
-    }
-  }
-
-  return { lightClasses, hasDarkVariants };
+  return { lightClasses, darkCounts };
 }

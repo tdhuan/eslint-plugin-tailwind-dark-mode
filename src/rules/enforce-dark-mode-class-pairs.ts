@@ -74,7 +74,7 @@ const rule: Rule.RuleModule = {
         return;
       }
 
-      const { lightClasses, hasDarkVariants } = findClassesNeedingDark(
+      const { lightClasses, darkCounts } = findClassesNeedingDark(
         value,
         properties
       );
@@ -84,31 +84,34 @@ const rule: Rule.RuleModule = {
         type: 'missing';
       }> = [];
 
-      // Check each light class to see if there's a dark variant for its property group
+      // Check each light class to ensure there are enough dark variants
       lightClasses.forEach((lightClass) => {
         if (!lightClass.property) return;
 
-        // Check if there's any dark variant for this property group
-        if (!hasDarkVariants.has(lightClass.property)) {
-          // Generate proper dark variant using mapping
-          let expectedDarkClass = `dark:${lightClass.full}`;
+        // Generate proper dark variant using mapping
+        let expectedDarkClass = `dark:${lightClass.full}`;
 
-          if (lightClass.value) {
-            const darkValue = getDarkModeValue(
-              lightClass.value,
-              options.mappings
-            );
-            if (darkValue) {
-              expectedDarkClass = `dark:${lightClass.property}-${darkValue}`;
-            }
+        if (lightClass.value) {
+          const darkValue = getDarkModeValue(
+            lightClass.value,
+            options.mappings
+          );
+          if (darkValue) {
+            expectedDarkClass = `dark:${lightClass.property}-${darkValue}`;
           }
-
-          violations.push({
-            className: lightClass.full,
-            expected: expectedDarkClass,
-            type: 'missing',
-          });
         }
+
+        const count = darkCounts.get(lightClass.property) || 0;
+        if (count > 0) {
+          darkCounts.set(lightClass.property, count - 1);
+          return;
+        }
+
+        violations.push({
+          className: lightClass.full,
+          expected: expectedDarkClass,
+          type: 'missing',
+        });
       });
 
       // Apply all fixes and report violations
