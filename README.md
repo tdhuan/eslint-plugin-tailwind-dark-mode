@@ -17,20 +17,17 @@
 
 ## 📚 Table of Contents
 
-- [Installation](#installation)
-- [Quick Start](#quick-start)
-- [Configuration](#configuration)
+- [Installation](#-installation)
+- [Quick Start](#-quick-start)
+- [Configuration](#%EF%B8%8F-configuration)
   - [ESLint v8 (Legacy Config)](#eslint-v8-legacy-config)
   - [ESLint v9 (Flat Config)](#eslint-v9-flat-config)
-- [Rules](#rules)
-- [Usage Examples](#usage-examples)
-- [Advanced Configuration](#advanced-configuration)
-- [Integration Guides](#integration-guides)
-- [API Reference](#api-reference)
-- [Troubleshooting](#troubleshooting)
-- [Migration Guide](#migration-guide)
-- [Contributing](#contributing)
-- [License](#license)
+- [Rules](#-rules)
+- [Usage Examples](#-usage-examples)
+- [Advanced Configuration](#-advanced-configuration)
+- [Default Mappings](#-default-mappings)
+- [API Reference](#-api-reference)
+- [Troubleshooting](#-troubleshooting)
 
 ## 📦 Installation
 
