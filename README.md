@@ -6,7 +6,7 @@
 
 ## 🎯 Features
 
-- ✅ **Smart Detection** - Automatically detects missing dark mode variants for Tailwind CSS property groups
+- ✅ **Smart Detection** - Accurately detects missing dark mode variants for color-specific Tailwind CSS classes while avoiding false positives
 - 🔧 **Auto-fix Support** - Fix violations automatically with `--fix`
 - 🎨 **Configurable Properties** - Customize which Tailwind properties to check for dark mode pairs
 - 📦 **Framework Agnostic** - Works with React, Vue, Angular, and vanilla JavaScript
@@ -278,7 +278,7 @@ export default tseslint.config(
 
 ### `enforce-dark-mode-class-pairs`
 
-Ensures that Tailwind utility classes have corresponding dark mode variants for consistent theming.
+Ensures that color-specific Tailwind utility classes have corresponding dark mode variants for consistent theming. The plugin intelligently filters out non-color utilities to prevent false positives.
 
 #### ✅ Valid Examples
 
@@ -288,10 +288,13 @@ Ensures that Tailwind utility classes have corresponding dark mode variants for 
 <div className="bg-white dark:bg-black" />
 <div className="border-gray-200 dark:border-gray-800" />
 
-// Classes that don't need dark mode pairs
+// Classes that don't need dark mode pairs (non-color utilities)
 <div className="bg-transparent" />
 <div className="flex items-center" />
 <div className="p-4 mx-auto" />
+<div className="text-sm text-left" />
+<div className="border-2 border-x border-none" />
+<div className="shadow border-solid" />
 
 // With responsive modifiers (plugin checks base utilities)
 <div className="text-neutral-900 dark:text-neutral-100 md:text-neutral-800 md:dark:text-neutral-200" />
@@ -644,15 +647,9 @@ module.exports = {
 
 #### False positives on non-color utilities
 
-**Problem:** Getting errors for utilities that don't need dark mode pairs.
+**Problem:** Getting errors for utilities that don't need dark mode pairs (like `text-sm`, `border-2`, `shadow`, etc.).
 
-**Solution:** Configure the properties list to only check color-related utilities:
-
-```javascript
-'tailwind-dark-mode/enforce-dark-mode-class-pairs': ['error', {
-  properties: ['text', 'bg', 'border'], // Only check these
-}]
-```
+**Solution:** This has been fixed in recent versions! The plugin now automatically filters out non-color classes. It only checks classes that contain actual Tailwind color names (like `neutral`, `gray`, `red`, etc.). If you're still experiencing issues, ensure you're using the latest version.
 
 #### Custom colors not recognized
 
