@@ -90,6 +90,34 @@ export function getDarkModeValue(
 }
 
 /**
+ * All valid Tailwind color names
+ */
+const TAILWIND_COLOR_NAMES = [
+  'neutral',
+  'slate',
+  'gray',
+  'zinc',
+  'stone',
+  'red',
+  'orange',
+  'amber',
+  'yellow',
+  'lime',
+  'green',
+  'emerald',
+  'teal',
+  'cyan',
+  'sky',
+  'blue',
+  'indigo',
+  'violet',
+  'purple',
+  'fuchsia',
+  'pink',
+  'rose',
+];
+
+/**
  * Check if a value needs a dark mode pair
  */
 export function needsDarkModePair(value: string): boolean {
@@ -99,8 +127,14 @@ export function needsDarkModePair(value: string): boolean {
     return false;
   }
 
-  // Check if it's a color value
-  const colorPattern =
-    /^(neutral|slate|gray|zinc|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|white|black)-/;
-  return colorPattern.test(value) || value === 'white' || value === 'black';
+  // Special cases for white/black
+  if (value === 'white' || value === 'black') {
+    return true;
+  }
+
+  // Check if it matches color-number pattern (e.g., "neutral-900", "red-500")
+  const colorNumberPattern = new RegExp(
+    `^(${TAILWIND_COLOR_NAMES.join('|')})-(50|100|200|300|400|500|600|700|800|900|950)$`
+  );
+  return colorNumberPattern.test(value);
 }
