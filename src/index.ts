@@ -73,4 +73,3 @@ const plugin = {
 
 // Export for both CommonJS and ESM
 export default plugin;
-module.exports = plugin;
