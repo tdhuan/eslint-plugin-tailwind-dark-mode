@@ -57,6 +57,38 @@ ruleTester.run('enforce-dark-mode-class-pairs', rule, {
     {
       code: '<div className="text-neutral-100 dark:text-neutral-900 bg-neutral-50 dark:bg-neutral-950" />',
     },
+    // Non-color text classes should be ignored
+    {
+      code: '<div className="text-sm text-left text-center text-right text-justify" />',
+    },
+    {
+      code: '<div className="text-xs text-base text-lg text-xl text-2xl text-3xl" />',
+    },
+    {
+      code: '<div className="text-ellipsis text-clip text-wrap text-nowrap" />',
+    },
+    // Non-color border classes should be ignored
+    {
+      code: '<div className="border border-0 border-2 border-4 border-8" />',
+    },
+    {
+      code: '<div className="border-x border-y border-t border-r border-b border-l" />',
+    },
+    {
+      code: '<div className="border-solid border-dashed border-dotted border-double border-none" />',
+    },
+    // Non-color background classes should be ignored
+    {
+      code: '<div className="bg-none bg-auto bg-cover bg-contain" />',
+    },
+    // Shadow classes without colors should be ignored
+    {
+      code: '<div className="shadow shadow-sm shadow-md shadow-lg shadow-xl shadow-2xl shadow-none" />',
+    },
+    // Mixed color and non-color classes should only check colors
+    {
+      code: '<div className="text-neutral-900 dark:text-neutral-100 text-sm border-2 border-gray-200 dark:border-gray-800" />',
+    },
   ],
 
   invalid: [
@@ -176,6 +208,26 @@ ruleTester.run('enforce-dark-mode-class-pairs', rule, {
         },
       ],
       output: '<div className="text-white dark:text-black" />',
+    },
+    // Test that custom mappings work correctly with auto-fix
+    {
+      code: '<div className="bg-red-500" />',
+      options: [
+        {
+          mappings: {
+            'red-500': 'red-700',
+          },
+        },
+      ],
+      errors: [
+        {
+          messageId: 'missingDarkMode',
+          data: {
+            className: 'bg-red-500',
+          },
+        },
+      ],
+      output: '<div className="bg-red-500 dark:bg-red-700" />',
     },
   ],
 });
