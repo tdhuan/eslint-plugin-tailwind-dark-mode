@@ -2,8 +2,6 @@
 
 **Enforce consistent dark mode class pairs in your Tailwind CSS projects**
 
-[Features](#features) • [Installation](#installation) • [Usage](#usage) • [Rules](#rules) • [Configuration](#configuration) • [Examples](#examples)
-
 ## 🎯 Features
 
 - ✅ **Smart Detection** - Accurately detects missing dark mode variants for color-specific Tailwind CSS classes while avoiding false positives
