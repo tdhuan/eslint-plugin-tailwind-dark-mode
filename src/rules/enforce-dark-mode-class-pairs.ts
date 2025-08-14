@@ -62,6 +62,33 @@ const rule: Rule.RuleModule = {
     const autofix = options.autofix !== false;
 
     /**
+     * Check if a string is likely to contain CSS classes
+     */
+    function isLikelyCSSClasses(str: string): boolean {
+      if (!str || typeof str !== 'string') return false;
+
+      // Skip obvious non-CSS patterns
+      if (
+        str.includes('://') ||
+        str.includes('?') ||
+        str.includes('&') ||
+        str.includes('=')
+      ) {
+        return false;
+      }
+
+      // Look for typical Tailwind CSS class patterns
+      const tailwindPatterns = [
+        /\b(text|bg|border|shadow|ring|outline|divide|space|gap|rounded|p[lrbtxy]?|m[lrbtxy]?|w|h|min|max|flex|grid|justify|items|self|place|order|basis|grow|shrink|col|row|inset|top|right|bottom|left|z|opacity|scale|rotate|translate|skew|transform|transition|duration|ease|delay|animate|cursor|select|resize|scroll|appearance|will|filter|backdrop|accent|caret|decoration|list|whitespace|break|hyphens|content|sr)-/,
+        /\bdark:/,
+        /\b(sm|md|lg|xl|2xl):/,
+        /\b(hover|focus|active|visited|target|focus-within|focus-visible|motion-safe|motion-reduce|print):/,
+      ];
+
+      return tailwindPatterns.some((pattern) => pattern.test(str));
+    }
+
+    /**
      * Check a string literal for dark mode violations
      */
     function checkStringLiteral(node: any, value: string, isTemplate = false) {
@@ -221,7 +248,7 @@ const rule: Rule.RuleModule = {
         }
       },
 
-      // Check template literals in variable declarations
+      // Check template literals in variable declarations (only if likely to be CSS classes)
       VariableDeclarator(node: any) {
         if (node.init) {
           // Check template literals
@@ -229,13 +256,21 @@ const rule: Rule.RuleModule = {
             if (node.init.expressions.length === 0) {
               // Simple template literal with no expressions
               const str = node.init.quasis[0]?.value.raw || '';
-              checkStringLiteral(node.init, str, true);
+              // Only check if it looks like CSS classes (contains typical Tailwind patterns)
+              if (isLikelyCSSClasses(str)) {
+                checkStringLiteral(node.init, str, true);
+              }
             } else {
-              // Template literal with expressions
-              context.report({
-                node: node.init,
-                messageId: 'dynamicExpression',
-              });
+              // Template literal with expressions - only report if it looks like CSS classes
+              const allText = node.init.quasis
+                .map((q: any) => q.value.raw)
+                .join('');
+              if (isLikelyCSSClasses(allText)) {
+                context.report({
+                  node: node.init,
+                  messageId: 'dynamicExpression',
+                });
+              }
             }
           }
           // Check string literals
@@ -243,7 +278,10 @@ const rule: Rule.RuleModule = {
             node.init.type === 'Literal' &&
             typeof node.init.value === 'string'
           ) {
-            checkStringLiteral(node.init, node.init.value);
+            // Only check if it looks like CSS classes
+            if (isLikelyCSSClasses(node.init.value)) {
+              checkStringLiteral(node.init, node.init.value);
+            }
           }
         }
       },

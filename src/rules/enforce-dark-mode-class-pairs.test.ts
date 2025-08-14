@@ -61,6 +61,20 @@ ruleTester.run('enforce-dark-mode-class-pairs', rule, {
     {
       code: '<div className="text-sm text-left text-center text-right text-justify" />',
     },
+    // Non-CSS template literals should be ignored (URLs, query strings, etc.)
+    {
+      code: 'const newAttachmentUrl = `${updatedAttachmentPath}?${queryParams}`;',
+    },
+    {
+      code: 'const apiUrl = `https://api.example.com/users/${userId}`;',
+    },
+    {
+      code: 'const configPath = `/config/${env}.json`;',
+    },
+    // Non-CSS string literals should also be ignored
+    {
+      code: 'const message = "Hello world!";',
+    },
     {
       code: '<div className="text-xs text-base text-lg text-xl text-2xl text-3xl" />',
     },
