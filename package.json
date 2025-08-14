@@ -62,7 +62,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/tdhuan/eslint-plugin-tailwind-dark-mode.git"
+    "url": "git+https://github.com/tdhuan/eslint-plugin-tailwind-dark-mode.git"
   },
   "bugs": {
     "url": "https://github.com/tdhuan/eslint-plugin-tailwind-dark-mode/issues"
