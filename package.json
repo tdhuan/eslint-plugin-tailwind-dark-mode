@@ -1,6 +1,6 @@
 {
   "name": "eslint-plugin-tailwind-dark-mode",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "ESLint plugin to enforce Tailwind CSS dark mode class pairs",
   "keywords": [
     "eslint",
