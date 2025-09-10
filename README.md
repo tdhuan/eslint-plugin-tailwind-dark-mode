@@ -41,6 +41,12 @@ npm install --save-dev eslint-plugin-tailwind-dark-mode
 yarn add -D eslint-plugin-tailwind-dark-mode
 ```
 
+### pnpm
+
+```bash
+pnpm add -D eslint-plugin-tailwind-dark-mode
+```
+
 ### Requirements
 
 - Node.js >= 18.0.0
@@ -52,7 +58,14 @@ yarn add -D eslint-plugin-tailwind-dark-mode
 ### Step 1: Install the plugin
 
 ```bash
+# npm
 npm install --save-dev eslint-plugin-tailwind-dark-mode
+
+# yarn
+yarn add -D eslint-plugin-tailwind-dark-mode
+
+# pnpm
+pnpm add -D eslint-plugin-tailwind-dark-mode
 ```
 
 ### Step 2: Configure ESLint
